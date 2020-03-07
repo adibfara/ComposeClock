@@ -1,27 +1,48 @@
 package com.snakydesign.clock
 
-import androidx.animation.FloatPropKey
-import androidx.animation.Infinite
-import androidx.animation.transitionDefinition
+import androidx.animation.*
 
 /**
  * @author Adib Faramarzi (adibfara@gmail.com)
  */
 
 
-val Progress = FloatPropKey()
+val ParticleProgress = FloatPropKey()
 
 val ParticleAnimations = transitionDefinition {
     state(0) {
-        this[Progress] = 0f
+        this[ParticleProgress] = 0f
     }
 
     state(1) {
-        this[Progress] = 1f
+        this[ParticleProgress] = 1f
     }
 
     transition(fromState = 0, toState = 1) {
-        Progress using repeatable {
+        ParticleProgress using repeatable {
+            iterations = Infinite
+
+            animation = tween {
+                easing = CubicBezierEasing(0.2f, 1.0f, 0.4f, 0.0f)
+                duration = 1000
+            }
+        }
+    }
+}
+
+val SecondHandProgress = FloatPropKey()
+
+val SecondHandAnimations = transitionDefinition {
+    state(0) {
+        this[SecondHandProgress] = 0f
+    }
+
+    state(1) {
+        this[SecondHandProgress] = 1f
+    }
+
+    transition(fromState = 0, toState = 1) {
+        SecondHandProgress using repeatable {
             iterations = Infinite
             animation = tween {
                 duration = 1000

@@ -2,6 +2,9 @@ package com.snakydesign.clock
 
 import androidx.ui.graphics.Color
 import androidx.ui.unit.Dp
+import androidx.ui.unit.PxSize
+import androidx.ui.unit.min
+import com.snakydesign.clock.ParticleObject.Type.*
 import java.util.*
 import kotlin.math.cos
 import kotlin.math.min
@@ -11,91 +14,88 @@ import kotlin.math.sin
  * @author Adib Faramarzi (adibfara@gmail.com)
  */
 data class ClockConfig(
-    val startX: Int,
-    val startY: Int,
-    val endX: Int,
-    val endY: Int,
     val random: Random,
+    val colorPalette: ColorPalette = ColorPalette.Adrift,
     val maxCount: Int = 100,
     val hourCount: Int = 50,
     val minuteCount: Int = 100
+)
+
+enum class ColorPalette(
+    val mainColors: Array<Color>,
+    val handleColor: Color,
+    val dividerColor: Color,
+    val borderColor: Color,
+    val backgroundColor: Color
+
 ) {
-
-    private val lengthX: Int = (endX - startX)
-    private val lengthY: Int = (endY - startY)
-    val centerX: Int = startX + (lengthX / 2)
-    val centerY: Int = startY + (lengthY / 2)
-    val radius: Int = min(lengthX, lengthY) / 2
-}
-
-enum class ColorPalette(val baseColor: Color) {
-    Blue(Color.Blue),
-    Green(Color.Green),
-    Red(Color.Red),
+    Adrift(
+        arrayOf(
+            Color(0xFF99B898),
+            Color(0xFFFECEA8),
+            Color(0xFFFF847C)
+        ),
+        Color(0xFFE84A5F),
+        Color(0x39E84A5F),
+        Color(0x41E84A5F),
+        Color(0xff2A363B)
+    ),
 }
 
 data class ParticleObject(
     val type: Type,
     val clockConfig: ClockConfig,
-    var animationParams: AnimationParams = AnimationParams(clockConfig)
+    var animationParams: AnimationParams = AnimationParams()
 ) {
     data class AnimationParams(
-        var locationX: Dp,
-        var locationY: Dp,
-        var alpha: Float,
-        var isFilled: Boolean,
+        var locationX: Dp = Dp(-1f),
+        var locationY: Dp = Dp(-1f),
+        var alpha: Float = -1f,
+        var isFilled: Boolean = false,
+        var currentColor: Color = Color(0),
         var particleSize: Dp = Dp(0f),
-        var colorPalette: ColorPalette = ColorPalette.Blue,
         var currentAngle: Float = 1f,
         var progressModifier: Float = 1f
-    ) {
-        constructor(clockConfig: ClockConfig) : this( //todo remove
-            Dp(clockConfig.centerX.toFloat()),
-            Dp(clockConfig.centerY.toFloat()),
-            clockConfig.random.nextFloat(),
-            clockConfig.random.nextFloat() < 0.7f
-        )
-    }
+    )
 
     enum class Type(
         val startAngleOffsetRadians: Float,
         val endAngleOffsetRadians: Float,
         val maxLengthModifier: Float,
+        val minLengthModifier: Float,
         val minSize: Dp,
-        val maxSize: Dp,
-        val fadesIn: Boolean
+        val maxSize: Dp
     ) {
         Background(
             Math.PI.toFloat() * (0.5f / 12f),
             2 * Math.PI.toFloat() - (Math.PI.toFloat() * (0.5f / 12f)),
-            0.9f,
-            Dp(8f),
-            Dp(12f),
-            true
+            0.8f,
+            0.2f,
+            Dp(4f),
+            Dp(12f)
         ),
         Hour(
             0f,
             0f,
-            0.5f,
-            Dp(16f),
-            Dp(24f),
-            false
+            0.6f,
+            0.05f,
+            Dp(8f),
+            Dp(32f)
         ),
         Minute(
             0f,
             0f,
-            0.7f,
-            Dp(5f),
+            0.75f,
+            0.05f,
             Dp(8f),
-            false
+            Dp(32f)
         )
     }
 }
 
 fun ParticleObject.randomize(
     random: Random,
-    clockConfig: ClockConfig,
-    colorPalette: ColorPalette = ColorPalette.Blue
+    pxSize: PxSize
 ) {
     val calendar = Calendar.getInstance()
     val currentMinuteCount = calendar.get(Calendar.MINUTE)
@@ -110,21 +110,30 @@ fun ParticleObject.randomize(
     val randomAngleOffset =
         randomFloat(type.startAngleOffsetRadians, type.endAngleOffsetRadians, random)
     val randomizedAngle = when (type) {
-        ParticleObject.Type.Hour -> currentHourMinuteRadians.toFloat()
-        ParticleObject.Type.Minute -> currentMinuteRadians.toFloat()
-        ParticleObject.Type.Background -> (currentHourMinuteRadians + randomAngleOffset).toFloat()
+        Hour -> currentHourMinuteRadians.toFloat()
+        Minute -> currentMinuteRadians.toFloat()
+        Background -> (currentHourMinuteRadians + randomAngleOffset).toFloat()
     }
-    val randomLength = randomFloat(0f, this.type.maxLengthModifier * clockConfig.radius, random)
+    val centerX = (pxSize.width / 2).value + randomFloat(-10f, 10f, random)
+    val centerY = (pxSize.height / 2).value + randomFloat(-10f, 10f, random)
+    val radius = min(centerX, centerY)
+    val randomLength =
+        randomFloat(type.minLengthModifier * radius, this.type.maxLengthModifier * radius, random)
     val x = randomLength * cos(randomizedAngle)
     val y = randomLength * sin(randomizedAngle)
+    val color = when (type) {
+        Background -> clockConfig.colorPalette.mainColors.random()
+        Hour -> clockConfig.colorPalette.handleColor
+        Minute -> clockConfig.colorPalette.handleColor
+    }
     animationParams = ParticleObject.AnimationParams(
         isFilled = clockConfig.random.nextFloat() < 0.7f,
-        alpha = (random.nextFloat() - 0.1f).coerceAtLeast(0f),
-        locationX = Dp(clockConfig.centerX.toFloat() + x),
-        locationY = Dp(clockConfig.centerY.toFloat() + y),
+        alpha = (random.nextFloat()).coerceAtLeast(0f),
+        locationX = Dp(centerX + x),
+        locationY = Dp(centerY + y),
         particleSize = Dp(randomFloat(type.minSize.value, type.maxSize.value, random)),
-        colorPalette = colorPalette,
         currentAngle = randomizedAngle.toFloat(),
-        progressModifier = randomFloat(1f, 2f, random)
+        progressModifier = randomFloat(1f, 2f, random),
+        currentColor = color
     )
 }
