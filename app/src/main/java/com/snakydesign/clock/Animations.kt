@@ -19,7 +19,7 @@ val ParticleAnimations = transitionDefinition {
     }
 
     transition(fromState = 0, toState = 1) {
-        ParticleProgress using repeatable {
+        ParticleProgress using repeatable<Float> {
             iterations = Infinite
 
             animation = tween {
@@ -42,7 +42,7 @@ val SecondHandAnimations = transitionDefinition {
     }
 
     transition(fromState = 0, toState = 1) {
-        SecondHandProgress using repeatable {
+        SecondHandProgress using repeatable<Float> {
             iterations = Infinite
             animation = tween {
                 duration = 1000

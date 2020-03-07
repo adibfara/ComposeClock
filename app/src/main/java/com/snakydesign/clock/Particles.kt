@@ -11,10 +11,7 @@ import androidx.ui.unit.Dp
 import androidx.ui.unit.PxSize
 import androidx.ui.unit.min
 import java.util.*
-import kotlin.math.cos
-import kotlin.math.hypot
-import kotlin.math.max
-import kotlin.math.sin
+import kotlin.math.*
 
 /**
  * @author Adib Faramarzi (adibfara@gmail.com)
@@ -23,46 +20,33 @@ import kotlin.math.sin
 @Composable
 fun ParticleHeartBeat(
     clockConfig: ClockConfig,
-    count: Int,
     type: ParticleObject.Type
 ) {
-
-
     val paint = Paint()
     val random = Random()
-    val particles = mutableListOf<ParticleObject>()/*1.rangeTo(count).map {
-                ParticleObject(type, clockConfig).also {
-                    it.randomize(random, PxSize(Px(1000f), Px(1000f)))
-                    it.animate(0f, PxSize(Px(1000f), Px(1000f)))
-                }
-            }*/
-
+    var particle: ParticleObject? = null
     Transition(definition = ParticleAnimations, initState = 0, toState = 1) { state ->
         Draw(onPaint = { canvas, size ->
             val progress = 1 - state[ParticleProgress]
-            if (particles.isEmpty()) {
-                particles.addAll(1.rangeTo(count).map {
-                    ParticleObject(type, clockConfig).also {
-                        it.randomize(random, size)
-                        it.animate(progress, size)
-                        it.drawOnCanvas(paint, canvas)
-                    }
-                })
-            } else {
-                particles.forEach { particleObject ->
-                    particleObject.animate(
-                        progress,
-                        size
-                    )
-                    particleObject.drawOnCanvas(paint, canvas)
+            if (particle == null) {
+                particle = ParticleObject(type, clockConfig).also {
+                    it.randomize(random, size)
                 }
             }
+            particle!!.apply {
+                animate(
+                    progress,
+                    size
+                )
+                drawOnCanvas(paint, canvas)
+            }
+
         })
     }
 }
 
 
-fun ParticleObject.animate(
+private fun ParticleObject.animate(
     progress: Float,
     size: PxSize
 ) {
@@ -71,7 +55,6 @@ fun ParticleObject.animate(
     val radius = min(centerX, centerY).value
     val random = Random()
     val modifier = max(0.2f, progress) * randomFloat(0.1f, 8f, random)
-    //animationParams.currentAngle -= progress * 0.01f
     val xUpdate = modifier * cos(animationParams.currentAngle)
     val yUpdate = modifier * sin(animationParams.currentAngle)
     val progressionX = animationParams.locationX.value + xUpdate
@@ -90,23 +73,25 @@ fun ParticleObject.animate(
         animationParams.locationY = Dp(progressionY)
     }
 
-    val distanceFromCenterPercent = currentLengthByRadius - type.minLengthModifier
-    if (distanceFromCenterPercent <= 0f) {
-        animationParams.alpha = 0f
-    } else if (animationParams.alpha == 0f) {
-        animationParams.alpha = random.nextFloat()
+    when {
+        currentLengthByRadius - type.minLengthModifier <= 0f -> {
+            animationParams.alpha = 0f
+        }
+        animationParams.alpha == 0f -> {
+            animationParams.alpha = random.nextFloat()
 
-//        animationParams.alpha = (animationParams.alpha + modifier * 0.01f).coerceAtMost(1f)
-    } else {
-        val fadeOutRange = this.type.maxLengthModifier
-        animationParams.alpha =
-            if (currentLengthByRadius < fadeOutRange) animationParams.alpha else ((1f - currentLengthByRadius) / 1f - fadeOutRange)
+        }
+        else -> {
+            val fadeOutRange = this.type.maxLengthModifier
+            animationParams.alpha =
+                if (currentLengthByRadius < fadeOutRange) animationParams.alpha else ((1f - currentLengthByRadius) / 1f - fadeOutRange)
+        }
     }
 
 
 }
 
-fun ParticleObject.drawOnCanvas(paint: Paint, canvas: Canvas) {
+private fun ParticleObject.drawOnCanvas(paint: Paint, canvas: Canvas) {
     canvas.apply {
         paint.color = animationParams.currentColor
         paint.alpha = animationParams.alpha
@@ -124,4 +109,49 @@ fun ParticleObject.drawOnCanvas(paint: Paint, canvas: Canvas) {
             paint
         )
     }
+}
+
+
+private fun ParticleObject.randomize(
+    random: Random,
+    pxSize: PxSize
+) {
+    val calendar = Calendar.getInstance()
+    val currentMinuteCount = calendar.get(Calendar.MINUTE)
+    val currentHour = (calendar.get(Calendar.HOUR_OF_DAY) % 24).toDouble() / 12.0
+    val currentMinute = (currentMinuteCount).toDouble() / 60.0
+    val currentMinuteRadians = (Math.PI / -2.0) + currentMinute * 2.0 * Math.PI
+    val oneHourRadian = (currentMinute * 2.0 * Math.PI) / 12.0
+    val currentHourRadians =
+        (Math.PI / -2.0) + (currentHour) * 2.0 * Math.PI
+    val currentHourMinuteRadians = (oneHourRadian * currentMinute) + currentHourRadians
+    val randomAngleOffset =
+        randomFloat(type.startAngleOffsetRadians, type.endAngleOffsetRadians, random)
+    val randomizedAngle = when (type) {
+        ParticleObject.Type.Hour -> currentHourMinuteRadians.toFloat()
+        ParticleObject.Type.Minute -> currentMinuteRadians.toFloat()
+        ParticleObject.Type.Background -> (currentHourMinuteRadians + randomAngleOffset).toFloat()
+    }
+    val centerX = (pxSize.width / 2).value + randomFloat(-10f, 10f, random)
+    val centerY = (pxSize.height / 2).value + randomFloat(-10f, 10f, random)
+    val radius = kotlin.math.min(centerX, centerY)
+    val randomLength =
+        randomFloat(type.minLengthModifier * radius, this.type.maxLengthModifier * radius, random)
+    val x = randomLength * cos(randomizedAngle)
+    val y = randomLength * sin(randomizedAngle)
+    val color = when (type) {
+        ParticleObject.Type.Background -> clockConfig.colorPalette.mainColors.random()
+        ParticleObject.Type.Hour -> clockConfig.colorPalette.handleColor
+        ParticleObject.Type.Minute -> clockConfig.colorPalette.handleColor
+    }
+    animationParams = ParticleObject.AnimationParams(
+        isFilled = clockConfig.random.nextFloat() < 0.7f,
+        alpha = (random.nextFloat()).coerceAtLeast(0f),
+        locationX = Dp(centerX + x),
+        locationY = Dp(centerY + y),
+        particleSize = Dp(randomFloat(type.minSize.value, type.maxSize.value, random)),
+        currentAngle = randomizedAngle.toFloat(),
+        progressModifier = randomFloat(1f, 2f, random),
+        currentColor = color
+    )
 }
