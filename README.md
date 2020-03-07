@@ -1,7 +1,7 @@
 
 Jetpack Compose Particle Clock made with Jetpack Compose
 --------------------------------------------------------
-[![Image](https://github.com/adibfara/ComposeClock/demo.gif)](https://github.com/adibfara/ComposeClock/demo.gif)
+[![Image](https://raw.githubusercontent.com/adibfara/ComposeClock/master/demo.gif)](https://raw.githubusercontent.com/adibfara/ComposeClock/master/demo.gif)
 
 This project is inspired by [Flutter Particle Clock](https://github.com/miickel/flutter_particle_clock).
 
