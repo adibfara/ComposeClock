@@ -54,25 +54,16 @@ private fun ParticleObject.animate(
     val centerY = size.height / 2
     val radius = min(centerX, centerY).value
     val random = Random()
-    val modifier = max(0.2f, progress) * randomFloat(0.1f, 8f, random)
+    val modifier = max(0.2f, progress) * 2f//* randomFloat(1f, 4f, random)
     val xUpdate = modifier * cos(animationParams.currentAngle)
     val yUpdate = modifier * sin(animationParams.currentAngle)
-    val progressionX = animationParams.locationX.value + xUpdate
-    val progressionY = animationParams.locationY.value + yUpdate
+    val newX = animationParams.locationX.value + xUpdate
+    val newY = animationParams.locationY.value + yUpdate
 
     val positionInsideCircle =
-        hypot(progressionY - centerY.value, progressionX - centerX.value)
+        hypot(newY - centerY.value, newX - centerX.value)
     val currentPositionIsInsideCircle = positionInsideCircle < radius * type.maxLengthModifier
     val currentLengthByRadius = positionInsideCircle / (radius * type.maxLengthModifier)
-
-    if (!currentPositionIsInsideCircle) {
-        randomize(random, size)
-        animationParams.alpha = 0f
-    } else {
-        animationParams.locationX = Dp(progressionX)
-        animationParams.locationY = Dp(progressionY)
-    }
-
     when {
         currentLengthByRadius - type.minLengthModifier <= 0f -> {
             animationParams.alpha = 0f
@@ -84,9 +75,21 @@ private fun ParticleObject.animate(
         else -> {
             val fadeOutRange = this.type.maxLengthModifier
             animationParams.alpha =
-                if (currentLengthByRadius < fadeOutRange) animationParams.alpha else ((1f - currentLengthByRadius) / 1f - fadeOutRange)
+                (if (currentLengthByRadius < fadeOutRange) animationParams.alpha else ((1f - currentLengthByRadius) / (1f - fadeOutRange))).coerceIn(
+                    0f,
+                    1f
+                )
         }
     }
+    if (!currentPositionIsInsideCircle) {
+        randomize(random, size)
+        animationParams.alpha = 0f
+    } else {
+        animationParams.locationX = Dp(newX)
+        animationParams.locationY = Dp(newY)
+    }
+
+
 
 
 }

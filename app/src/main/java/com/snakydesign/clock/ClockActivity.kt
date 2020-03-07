@@ -16,6 +16,7 @@ import androidx.ui.graphics.Paint
 import androidx.ui.graphics.PaintingStyle
 import androidx.ui.layout.*
 import androidx.ui.material.MaterialTheme
+import androidx.ui.material.darkColorPalette
 import androidx.ui.text.TextStyle
 import androidx.ui.tooling.preview.Preview
 import androidx.ui.unit.*
@@ -40,19 +41,19 @@ class ClockActivity : AppCompatActivity() {
 @Composable
 fun DefaultPreview() {
 
-    MaterialTheme {
-        Stack {
+    MaterialTheme() {
+        Stack() {
             ComposeClock()
 
             Align(alignment = Alignment.BottomLeft) {
                 Column {
                     Text(
-                        modifier = LayoutPadding(Dp(5f)),
+                        modifier = LayoutPadding(Dp(16f)),
                         text = "Compose Clock",
                         style = TextStyle(Color.White)
                     )
                     Text(
-                        modifier = LayoutPadding(Dp(5f)),
+                        modifier = LayoutPadding(Dp(16f)),
                         text = "github.com/adibfara/ComposeClock",
                         style = TextStyle(Color.White, TextUnit.Companion.Sp(12f))
                     )

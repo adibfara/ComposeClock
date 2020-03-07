@@ -69,7 +69,7 @@ data class ParticleObject(
         Background(
             Math.PI.toFloat() * (0.5f / 12f),
             2 * Math.PI.toFloat() - (Math.PI.toFloat() * (0.5f / 12f)),
-            0.8f,
+            0.85f,
             0.2f,
             Dp(4f),
             Dp(12f)
@@ -78,7 +78,7 @@ data class ParticleObject(
             0f,
             0f,
             0.6f,
-            0.05f,
+            0.01f,
             Dp(8f),
             Dp(32f)
         ),
@@ -86,7 +86,7 @@ data class ParticleObject(
             0f,
             0f,
             0.75f,
-            0.05f,
+            0.01f,
             Dp(8f),
             Dp(32f)
         )

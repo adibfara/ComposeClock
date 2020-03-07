@@ -8,8 +8,10 @@ import androidx.ui.geometry.Offset
 import androidx.ui.graphics.Canvas
 import androidx.ui.graphics.Paint
 import androidx.ui.graphics.PaintingStyle
+import androidx.ui.layout.LayoutPadding
 import androidx.ui.layout.LayoutSize
 import androidx.ui.layout.Stack
+import androidx.ui.unit.Dp
 import androidx.ui.unit.PxSize
 import androidx.ui.unit.min
 import androidx.ui.unit.toRect
@@ -31,51 +33,54 @@ fun ComposeClock() {
         )
         ClockBackground(clockConfig)
 
-        /**
-         * Background particles
-         */
+        Stack(LayoutSize.Fill + LayoutPadding(Dp(16f))) {
 
-        /**
-         * Background particles
-         */
-        repeat(1000) {
-            ParticleHeartBeat(
-                clockConfig,
-                ParticleObject.Type.Background
-            )
+            /**
+             * Background particles
+             */
+
+            /**
+             * Background particles
+             */
+            repeat(1000) {
+                ParticleHeartBeat(
+                    clockConfig,
+                    ParticleObject.Type.Background
+                )
+            }
+
+            /**
+             * Hour handle
+             */
+
+            /**
+             * Hour handle
+             */
+            repeat(100) {
+                ParticleHeartBeat(
+                    clockConfig,
+                    ParticleObject.Type.Hour
+                )
+            }
+
+            /**
+             * Minute handle
+             */
+
+            /**
+             * Minute handle
+             */
+            repeat(100) {
+                ParticleHeartBeat(
+                    clockConfig,
+                    ParticleObject.Type.Minute
+                )
+            }
+
+            ClockBackgroundBorder(clockConfig)
+            ClockMinuteCircles(clockConfig)
+            ClockSecondHand(clockConfig)
         }
-
-        /**
-         * Hour handle
-         */
-
-        /**
-         * Hour handle
-         */
-        repeat(100) {
-            ParticleHeartBeat(
-                clockConfig,
-                ParticleObject.Type.Hour
-            )
-        }
-
-        /**
-         * Minute handle
-         */
-
-        /**
-         * Minute handle
-         */
-        repeat(100) {
-            ParticleHeartBeat(
-                clockConfig,
-                ParticleObject.Type.Minute
-            )
-        }
-
-        ClockBackgroundBorder(clockConfig)
-        ClockMinuteCircles(clockConfig)
-        ClockSecondHand(clockConfig)
     }
 }
 
