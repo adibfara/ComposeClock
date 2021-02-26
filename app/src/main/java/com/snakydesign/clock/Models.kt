@@ -1,14 +1,8 @@
 package com.snakydesign.clock
 
-import androidx.ui.graphics.Color
-import androidx.ui.unit.Dp
-import androidx.ui.unit.PxSize
-import androidx.ui.unit.min
-import com.snakydesign.clock.ParticleObject.Type.*
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.unit.Dp
 import java.util.*
-import kotlin.math.cos
-import kotlin.math.min
-import kotlin.math.sin
 
 /**
  * @author Adib Faramarzi (adibfara@gmail.com)

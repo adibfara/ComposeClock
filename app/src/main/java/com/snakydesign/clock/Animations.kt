@@ -1,10 +1,13 @@
 package com.snakydesign.clock
+/*
 
 import androidx.animation.*
 
+*/
 /**
  * @author Adib Faramarzi (adibfara@gmail.com)
- */
+ *//*
+
 
 
 val ParticleProgress = FloatPropKey()
@@ -50,3 +53,4 @@ val SecondHandAnimations = transitionDefinition {
         }
     }
 }
+*/

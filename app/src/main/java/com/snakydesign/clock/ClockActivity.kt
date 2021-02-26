@@ -1,34 +1,24 @@
 package com.snakydesign.clock
 
 import android.os.Bundle
+import androidx.activity.compose.setContent
 import androidx.appcompat.app.AppCompatActivity
-import androidx.compose.Composable
-import androidx.interpolator.view.animation.FastOutSlowInInterpolator
-import androidx.ui.animation.Transition
-import androidx.ui.core.Alignment
-import androidx.ui.core.Draw
-import androidx.ui.core.Text
-import androidx.ui.core.setContent
-import androidx.ui.geometry.Offset
-import androidx.ui.graphics.Canvas
-import androidx.ui.graphics.Color
-import androidx.ui.graphics.Paint
-import androidx.ui.graphics.PaintingStyle
-import androidx.ui.layout.*
-import androidx.ui.material.MaterialTheme
-import androidx.ui.material.darkColorPalette
-import androidx.ui.text.TextStyle
-import androidx.ui.tooling.preview.Preview
-import androidx.ui.unit.*
-import java.util.*
-import kotlin.math.ceil
-import kotlin.math.cos
-import kotlin.math.floor
-import kotlin.math.sin
+import androidx.compose.foundation.layout.*
+import androidx.compose.material.MaterialTheme
+import androidx.compose.material.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 
 class ClockActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
         setContent {
             MaterialTheme {
                 DefaultPreview()
@@ -42,23 +32,26 @@ class ClockActivity : AppCompatActivity() {
 fun DefaultPreview() {
 
     MaterialTheme() {
-        Stack() {
+        Box(Modifier.fillMaxSize(), contentAlignment = Alignment.BottomCenter) {
             ComposeClock()
+            Column(
+                Modifier
+                    .fillMaxWidth()
+                    .padding(16.dp)) {
+                Text(
+                    modifier = Modifier,
+                    text = "Compose Clock",
+                    style = TextStyle(Color.White)
+                )
+                Text(
+                    modifier = Modifier,
+                    text = "github.com/adibfara/ComposeClock",
+                    style = TextStyle(Color.White, fontSize = 12.sp)
+                )
 
-            Align(alignment = Alignment.BottomLeft) {
-                Column {
-                    Text(
-                        modifier = LayoutPadding(Dp(16f)),
-                        text = "Compose Clock",
-                        style = TextStyle(Color.White)
-                    )
-                    Text(
-                        modifier = LayoutPadding(Dp(16f)),
-                        text = "github.com/adibfara/ComposeClock",
-                        style = TextStyle(Color.White, TextUnit.Companion.Sp(12f))
-                    )
+            }
+            Box(Modifier.fillMaxWidth(), contentAlignment = Alignment.BottomCenter) {
 
-                }
             }
         }
     }
