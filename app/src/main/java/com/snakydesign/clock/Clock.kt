@@ -1,20 +1,21 @@
 package com.snakydesign.clock
 
-import androidx.compose.Composable
+import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
+import androidx.compose.material.MaterialTheme
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.drawscope.Fill
+import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.min
 import androidx.interpolator.view.animation.FastOutSlowInInterpolator
-import androidx.ui.animation.Transition
-import androidx.ui.core.Draw
-import androidx.ui.geometry.Offset
-import androidx.ui.graphics.Canvas
-import androidx.ui.graphics.Paint
-import androidx.ui.graphics.PaintingStyle
-import androidx.ui.layout.LayoutPadding
-import androidx.ui.layout.LayoutSize
-import androidx.ui.layout.Stack
-import androidx.ui.unit.Dp
-import androidx.ui.unit.PxSize
-import androidx.ui.unit.min
-import androidx.ui.unit.toRect
 import java.util.*
 import kotlin.math.cos
 import kotlin.math.sin
@@ -25,57 +26,41 @@ import kotlin.math.sin
 
 @Composable
 fun ComposeClock() {
-    Stack(modifier = LayoutSize.Fill) {
-
+    Box(modifier = Modifier.fillMaxSize()) {
 
         val clockConfig = ClockConfig(
             Random()
         )
+
         ClockBackground(clockConfig)
 
-        Stack(LayoutSize.Fill + LayoutPadding(Dp(16f))) {
+        Box(modifier = Modifier
+            .fillMaxSize()
+            .padding(16.dp)) {
 
             /**
              * Background particles
              */
-
-            /**
-             * Background particles
-             */
-            repeat(1000) {
-                ParticleHeartBeat(
-                    clockConfig,
-                    ParticleObject.Type.Background
-                )
-            }
+            ParticleHeartBeat(
+                clockConfig,
+                ParticleObject.Type.Background
+            )
 
             /**
              * Hour handle
              */
-
-            /**
-             * Hour handle
-             */
-            repeat(100) {
-                ParticleHeartBeat(
-                    clockConfig,
-                    ParticleObject.Type.Hour
-                )
-            }
+            ParticleHeartBeat(
+                clockConfig,
+                ParticleObject.Type.Hour
+            )
 
             /**
              * Minute handle
              */
-
-            /**
-             * Minute handle
-             */
-            repeat(100) {
-                ParticleHeartBeat(
-                    clockConfig,
-                    ParticleObject.Type.Minute
-                )
-            }
+            ParticleHeartBeat(
+                clockConfig,
+                ParticleObject.Type.Minute
+            )
 
             ClockBackgroundBorder(clockConfig)
             ClockMinuteCircles(clockConfig)
@@ -86,101 +71,108 @@ fun ComposeClock() {
 
 @Composable
 private fun ClockBackground(clockConfig: ClockConfig) {
-    val backgroundPaint = Paint().apply {
-        color = clockConfig.colorPalette.backgroundColor
-        style = PaintingStyle.fill
+    Spacer(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(clockConfig.colorPalette.backgroundColor)
+    )
+}
+
+@Preview
+@Composable
+fun ClockBackgroundPreview() {
+    MaterialTheme {
+        ClockBackground(clockConfig = ClockConfig())
     }
-    Draw(onPaint = { canvas: Canvas, parentSize: PxSize ->
-        canvas.drawRect(parentSize.toRect(), backgroundPaint)
-    })
 }
 
 @Composable
 private fun ClockSecondHand(clockConfig: ClockConfig) {
-    val interpolator = FastOutSlowInInterpolator()
 
-    Transition(definition = SecondHandAnimations, initState = 0, toState = 1) { state ->
-        Draw(onPaint = { canvas, parentSize ->
-            val clockRadius =
-                0.9f * min((parentSize.width / 2), (parentSize.height / 2)).value
-            val paint = Paint().apply {
-                style = PaintingStyle.fill
-                color = clockConfig.colorPalette.handleColor
-            }
-            val centerX = (parentSize.width / 2).value
-            val centerY = (parentSize.height / 2).value
-            val oneMinuteRadians = Math.PI / 30
+    Canvas(Modifier.fillMaxSize()) {
+        val interpolator = FastOutSlowInInterpolator()
+        val clockRadius = min(size.width.toDp(), size.height.toDp()).value * 0.9f
+        val centerX = (size.width / 2)
+        val centerY = (size.height / 2)
 
-            val currentSecondInMillisecond = System.currentTimeMillis() % 1000
-            val progression = (currentSecondInMillisecond / 1000.0)
-            val interpolatedProgression =
-                interpolator.getInterpolation(progression.toFloat())
-            val animatedSecond =
-                Calendar.getInstance().get(Calendar.SECOND) + interpolatedProgression
+        val oneMinuteRadians = Math.PI / 30
 
-            val degree = -Math.PI / 2 + (animatedSecond * oneMinuteRadians)
-            val x = centerX + cos(degree) * clockRadius
-            val y = centerY + sin(degree) * clockRadius
+        val currentSecondInMillisecond = System.currentTimeMillis() % 1000
+        val progression = (currentSecondInMillisecond / 1000.0)
+        val interpolatedProgression =
+            interpolator.getInterpolation(progression.toFloat())
+        val animatedSecond =
+            Calendar.getInstance().get(Calendar.SECOND) + interpolatedProgression
 
-            paint.style = PaintingStyle.fill
-            val radius = 8f
-            canvas.drawCircle(
-                (Offset(x.toFloat(), y.toFloat())),
-                radius,
-                paint
-            )
-        })
+        val degree = -Math.PI / 2 + (animatedSecond * oneMinuteRadians)
+
+        val x = centerX + cos(degree) * clockRadius
+        val y = centerY + sin(degree) * clockRadius
+
+        val radius = 8f
+        drawCircle(
+            clockConfig.colorPalette.handleColor,
+            radius,
+            (Offset(x.toFloat(), y.toFloat())),
+            style = Fill
+        )
+    }
+}
+
+@Preview
+@Composable
+private fun ClockSecondHandPreview() {
+    MaterialTheme {
+        ClockSecondHand(clockConfig = ClockConfig())
     }
 }
 
 @Composable
 private fun ClockMinuteCircles(clockConfig: ClockConfig) {
-    Draw(onPaint = { canvas: Canvas, parentSize: PxSize ->
-        val clockRadius = 0.95f * min((parentSize.width / 2), (parentSize.height / 2)).value
-        val paint = Paint().apply {
-            style = PaintingStyle.fill
-            color = clockConfig.colorPalette.handleColor
-        }
-        val centerX = (parentSize.width / 2).value
-        val centerY = (parentSize.height / 2).value
+    Canvas(modifier = Modifier.fillMaxSize()) {
+        val clockRadius = min(size.width.toDp(), size.height.toDp()).value * 0.95f
+        val centerX = (size.width / 2)
+        val centerY = (size.height / 2)
         val oneMinuteRadians = Math.PI / 30
         0.rangeTo(59).forEach { minute ->
             val isHour = minute % 5 == 0
             val degree = -Math.PI / 2 + (minute * oneMinuteRadians)
             val x = centerX + cos(degree) * clockRadius
             val y = centerY + sin(degree) * clockRadius
-
-            val radius: Float
-            if (isHour) {
-                paint.style = PaintingStyle.fill
-                radius = 12f
-            } else {
-                paint.style = PaintingStyle.stroke
-                radius = 6f
-            }
-            canvas.drawCircle(
-                (Offset(x.toFloat(), y.toFloat())),
-                radius,
-                paint
+            drawCircle(
+                radius = if (isHour) 12f else 6f,
+                color = if (isHour) clockConfig.colorPalette.handleColor else clockConfig.colorPalette.borderColor,
+                center = Offset(x.toFloat(), y.toFloat()),
+                style = if (isHour) Fill else Stroke(2f),
             )
         }
+    }
+}
 
-    })
+@Preview
+@Composable
+private fun ClockMinutePreview() {
+    MaterialTheme {
+        ClockMinuteCircles(clockConfig = ClockConfig())
+    }
 }
 
 @Composable
 private fun ClockBackgroundBorder(clockConfig: ClockConfig) {
-    Draw(onPaint = { canvas: Canvas, parentSize: PxSize ->
-        val radius = min((parentSize.width / 2), (parentSize.height / 2)).value * 0.9f
-        val paint = Paint().apply {
-            style = PaintingStyle.stroke
-            strokeWidth = 10f
-            color = clockConfig.colorPalette.borderColor
-        }
-        canvas.drawCircle(
-            (Offset((parentSize.width / 2).value, (parentSize.height / 2).value)),
-            radius,
-            paint
+    Canvas(modifier = Modifier.fillMaxSize()) {
+        drawCircle(
+            radius = min(size.width.toDp(), size.height.toDp()).value * 0.9f,
+            color = clockConfig.colorPalette.borderColor,
+            center = Offset((size.width / 2), (size.height / 2)),
+            style = Stroke(width = 10f),
         )
-    })
+    }
+}
+
+@Preview
+@Composable
+private fun ClockBackgroundBorderPreview() {
+    MaterialTheme {
+        ClockBackgroundBorder(clockConfig = ClockConfig())
+    }
 }
