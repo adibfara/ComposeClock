@@ -1,17 +1,34 @@
 package com.snakydesign.clock
 
-import androidx.compose.Composable
-import androidx.ui.animation.Transition
-import androidx.ui.core.Draw
-import androidx.ui.geometry.Offset
-import androidx.ui.graphics.Canvas
-import androidx.ui.graphics.Paint
-import androidx.ui.graphics.PaintingStyle
-import androidx.ui.unit.Dp
-import androidx.ui.unit.PxSize
-import androidx.ui.unit.min
+import androidx.compose.animation.core.CubicBezierEasing
+import androidx.compose.animation.core.RepeatMode
+import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.rememberInfiniteTransition
+import androidx.compose.animation.core.tween
+import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.material.MaterialTheme
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.graphics.SolidColor
+import androidx.compose.ui.graphics.drawscope.DrawScope
+import androidx.compose.ui.graphics.drawscope.Fill
+import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.layout.onSizeChanged
+import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.dp
 import java.util.*
-import kotlin.math.*
+import kotlin.math.cos
+import kotlin.math.hypot
+import kotlin.math.min
+import kotlin.math.sin
 
 /**
  * @author Adib Faramarzi (adibfara@gmail.com)
@@ -20,48 +37,66 @@ import kotlin.math.*
 @Composable
 fun ParticleHeartBeat(
     clockConfig: ClockConfig,
-    type: ParticleObject.Type
+    type: ParticleObject.Type,
 ) {
-    val paint = Paint()
-    val random = Random()
-    var particle: ParticleObject? = null
-    Transition(definition = ParticleAnimations, initState = 0, toState = 1) { state ->
-        Draw(onPaint = { canvas, size ->
-            val progress = 1 - state[ParticleProgress]
-            if (particle == null) {
-                particle = ParticleObject(type, clockConfig).also {
-                    it.randomize(random, size)
-                }
-            }
-            particle!!.apply {
-                animate(
-                    progress,
-                    size
-                )
-                drawOnCanvas(paint, canvas)
-            }
 
-        })
+    val animation = rememberInfiniteTransition()
+    val particles = remember { mutableStateOf(listOf<ParticleObject>()) }
+    val animated by animation.animateFloat(
+        initialValue = 0f,
+        targetValue = 1f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(500, easing = CubicBezierEasing(0.98f, 0.2f, 1.0f, 1.0f)),
+            repeatMode = RepeatMode.Reverse
+        )
+    )
+
+    Canvas(
+        modifier = Modifier
+            .fillMaxSize()
+            .onSizeChanged {
+                particles.value = 10
+                    .rangeTo(800)
+                    .map {
+                        ParticleObject(type, clockConfig)
+                    }
+            }
+    ) {
+        particles.value.forEach { particle ->
+            particle.animate(
+                animated,
+                size,
+            )
+            drawParticle(particle.animationParams)
+        }
+    }
+}
+
+@Preview
+@Composable
+private fun ParticleHeartBeatPreview() {
+    MaterialTheme {
+        ParticleHeartBeat(clockConfig = ClockConfig(), type = ParticleObject.Type.Background)
     }
 }
 
 
 private fun ParticleObject.animate(
     progress: Float,
-    size: PxSize
+    size: Size,
 ) {
     val centerX = size.width / 2
     val centerY = size.height / 2
-    val radius = min(centerX, centerY).value
+    val radius = min(centerX, centerY)
     val random = Random()
-    val modifier = max(0.2f, progress) * 2f//* randomFloat(1f, 4f, random)
+    val modifier = progress * animationParams.progressModifier.dp.value
     val xUpdate = modifier * cos(animationParams.currentAngle)
     val yUpdate = modifier * sin(animationParams.currentAngle)
     val newX = animationParams.locationX.value + xUpdate
     val newY = animationParams.locationY.value + yUpdate
 
     val positionInsideCircle =
-        hypot(newY - centerY.value, newX - centerX.value)
+        hypot(newY - centerY, newX - centerX)
     val currentPositionIsInsideCircle = positionInsideCircle < radius * type.maxLengthModifier
     val currentLengthByRadius = positionInsideCircle / (radius * type.maxLengthModifier)
     when {
@@ -88,36 +123,23 @@ private fun ParticleObject.animate(
         animationParams.locationX = Dp(newX)
         animationParams.locationY = Dp(newY)
     }
-
-
-
-
 }
 
-private fun ParticleObject.drawOnCanvas(paint: Paint, canvas: Canvas) {
-    canvas.apply {
-        paint.color = animationParams.currentColor
-        paint.alpha = animationParams.alpha
-        val centerW = animationParams.locationX.value
-        val centerH = animationParams.locationY.value
-        if (animationParams.isFilled) {
-            paint.style = PaintingStyle.fill
-        } else {
-            paint.style = PaintingStyle.stroke
-
-        }
+private fun DrawScope.drawParticle(animationParams: ParticleObject.AnimationParams) {
+    with(animationParams) {
         drawCircle(
-            Offset(centerW, centerH),
-            animationParams.particleSize.value / 2f,
-            paint
+            brush = SolidColor(currentColor),
+            radius = particleSize.value / 2f,
+            center = Offset(locationX.value, locationY.value),
+            style = if (isFilled) Fill else Stroke(1f),
+            alpha = alpha,
         )
     }
 }
 
-
 private fun ParticleObject.randomize(
     random: Random,
-    pxSize: PxSize
+    pxSize: Size,
 ) {
     val calendar = Calendar.getInstance()
     val currentMinuteCount = calendar.get(Calendar.MINUTE)
@@ -135,9 +157,9 @@ private fun ParticleObject.randomize(
         ParticleObject.Type.Minute -> currentMinuteRadians.toFloat()
         ParticleObject.Type.Background -> (currentHourMinuteRadians + randomAngleOffset).toFloat()
     }
-    val centerX = (pxSize.width / 2).value + randomFloat(-10f, 10f, random)
-    val centerY = (pxSize.height / 2).value + randomFloat(-10f, 10f, random)
-    val radius = kotlin.math.min(centerX, centerY)
+    val centerX = (pxSize.width / 2) + randomFloat(-10f, 10f, random)
+    val centerY = (pxSize.height / 2) + randomFloat(-10f, 10f, random)
+    val radius = min(centerX, centerY)
     val randomLength =
         randomFloat(type.minLengthModifier * radius, this.type.maxLengthModifier * radius, random)
     val x = randomLength * cos(randomizedAngle)
@@ -153,7 +175,7 @@ private fun ParticleObject.randomize(
         locationX = Dp(centerX + x),
         locationY = Dp(centerY + y),
         particleSize = Dp(randomFloat(type.minSize.value, type.maxSize.value, random)),
-        currentAngle = randomizedAngle.toFloat(),
+        currentAngle = randomizedAngle,
         progressModifier = randomFloat(1f, 2f, random),
         currentColor = color
     )

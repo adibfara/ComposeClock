@@ -1,24 +1,19 @@
 package com.snakydesign.clock
 
-import androidx.ui.graphics.Color
-import androidx.ui.unit.Dp
-import androidx.ui.unit.PxSize
-import androidx.ui.unit.min
-import com.snakydesign.clock.ParticleObject.Type.*
+
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.unit.Dp
 import java.util.*
-import kotlin.math.cos
-import kotlin.math.min
-import kotlin.math.sin
 
 /**
  * @author Adib Faramarzi (adibfara@gmail.com)
  */
 data class ClockConfig(
-    val random: Random,
+    val random: Random = Random(),
     val colorPalette: ColorPalette = ColorPalette.Adrift,
     val maxCount: Int = 100,
     val hourCount: Int = 50,
-    val minuteCount: Int = 100
+    val minuteCount: Int = 100,
 )
 
 enum class ColorPalette(
@@ -26,9 +21,9 @@ enum class ColorPalette(
     val handleColor: Color,
     val dividerColor: Color,
     val borderColor: Color,
-    val backgroundColor: Color
+    val backgroundColor: Color,
 
-) {
+    ) {
     Adrift(
         arrayOf(
             Color(0xFF99B898),
@@ -45,7 +40,7 @@ enum class ColorPalette(
 data class ParticleObject(
     val type: Type,
     val clockConfig: ClockConfig,
-    var animationParams: AnimationParams = AnimationParams()
+    var animationParams: AnimationParams = AnimationParams(),
 ) {
     data class AnimationParams(
         var locationX: Dp = Dp(-1f),
@@ -55,7 +50,7 @@ data class ParticleObject(
         var currentColor: Color = Color(0),
         var particleSize: Dp = Dp(0f),
         var currentAngle: Float = 1f,
-        var progressModifier: Float = 1f
+        var progressModifier: Float = 1f,
     )
 
     enum class Type(
@@ -64,31 +59,31 @@ data class ParticleObject(
         val maxLengthModifier: Float,
         val minLengthModifier: Float,
         val minSize: Dp,
-        val maxSize: Dp
+        val maxSize: Dp,
     ) {
         Background(
             Math.PI.toFloat() * (0.5f / 12f),
             2 * Math.PI.toFloat() - (Math.PI.toFloat() * (0.5f / 12f)),
-            0.85f,
-            0.2f,
+            0.65f,
+            0.12f,
             Dp(4f),
             Dp(12f)
         ),
         Hour(
             0f,
             0f,
-            0.6f,
+            0.5f,
             0.01f,
-            Dp(8f),
-            Dp(32f)
+            Dp(4f),
+            Dp(12f)
         ),
         Minute(
             0f,
             0f,
-            0.75f,
+            0.6f,
             0.01f,
-            Dp(8f),
-            Dp(32f)
+            Dp(4f),
+            Dp(12f)
         )
     }
 }
